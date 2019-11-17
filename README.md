@@ -1,0 +1,1 @@
+# Scrapper dla [Komputronik.pl](https://www.komputronik.pl/)
