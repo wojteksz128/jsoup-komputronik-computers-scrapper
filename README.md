@@ -1,1 +1,1 @@
-# Scrapper dla [Komputronik.pl](https://www.komputronik.pl/)
+# Scrapper dla [gotowych komputerów na Komputronik.pl](https://www.komputronik.pl/category/5801/komputery-pc.html)
