@@ -5,6 +5,8 @@ fun main() {
     println(doc.title())
     val newsHeadlines = doc.select("#products-list > div .pe2-head a.blank-link")
     for (headline in newsHeadlines) {
-        println("${headline.childNodes().first()}\n\t${headline.absUrl("href")}")
+        if (!headline.childNodes().first().toString().startsWith(" {{")) {
+            println("${headline.childNodes().first()}\n\t${headline.absUrl("href")}")
+        }
     }
 }
