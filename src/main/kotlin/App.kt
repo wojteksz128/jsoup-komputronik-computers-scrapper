@@ -29,6 +29,13 @@ fun fetchPcList(newsHeadlines:Elements)
 
 fun getPCSpecs(absURL:String){
     val doc = Jsoup.connect(absURL).get()
+    var price:Int
+    val priceTag = doc.select("#p-inner-prices .price")
+    for ( priceElement in priceTag) {
+        if (priceElement.select("span").toString().contains("small")) {
+            price = priceElement.select("span.proper").html().replace("&nbsp;", "").substringBefore("<").toInt()
+        }
+    }
     val specHeadlines = doc.select("#p-content-specification .full-specification") //tutaj przechodzi do tabeli ze specyfikacją kompa
     for (headline in specHeadlines) {
 
@@ -40,7 +47,6 @@ fun getPCSpecs(absURL:String){
         for ( tabHeader in tableHeader){
             println(tabHeader.select("th").text())
             val spec = tabHeader.select("td")
-//            if(spec.select("br").isNotEmpty()){
             if(spec.select("br").size>1){
                 spec.html().split("<br>")
                 for (s in spec.html().split("<br>")){
