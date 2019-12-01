@@ -21,7 +21,25 @@ fun fetchPcList(newsHeadlines:Elements)
             }
             else {
                 println("${headline.childNodes().first()}\n\t${headline.absUrl("href")}")
+                getPCSpecs(headline.absUrl("href"))
             }
+        }
+    }
+}
+
+fun getPCSpecs(absURL:String){
+    val doc = Jsoup.connect(absURL).get()
+    val specHeadlines = doc.select("#p-content-specification .full-specification") //tutaj przechodzi do tabeli ze specyfikacją kompa
+    for (headline in specHeadlines) {
+
+        if(headline.toString().contains("ng-")){
+         continue
+        }
+
+        val tableHeader = headline.select(".section table tr")
+        for ( tabHeader in tableHeader){
+            println(tabHeader.select("th"))
+            println(tabHeader.select("td"))
         }
     }
 }
