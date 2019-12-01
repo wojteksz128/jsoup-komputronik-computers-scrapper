@@ -38,8 +38,16 @@ fun getPCSpecs(absURL:String){
 
         val tableHeader = headline.select(".section table tr")
         for ( tabHeader in tableHeader){
-            println(tabHeader.select("th"))
-            println(tabHeader.select("td"))
+            println(tabHeader.select("th").text())
+            val spec = tabHeader.select("td")
+//            if(spec.select("br").isNotEmpty()){
+            if(spec.select("br").size>1){
+                spec.html().split("<br>")
+                for (s in spec.html().split("<br>")){
+                    println(s)
+                }
+            } else
+            println(tabHeader.select("td").text())
         }
     }
 }
