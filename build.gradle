@@ -6,12 +6,17 @@ group 'net.wojteksz128'
 version '1.0-SNAPSHOT'
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.jsoup:jsoup:1.12.1"
+    implementation("org.jetbrains.exposed:exposed:0.17.5")
+    // H2 in-memory database
+    implementation("com.h2database:h2:1.4.191")
+    // Exposed depends on Joda-time so include it
+    implementation("joda-time:joda-time:2.9.2")
 }
 
 compileKotlin {
