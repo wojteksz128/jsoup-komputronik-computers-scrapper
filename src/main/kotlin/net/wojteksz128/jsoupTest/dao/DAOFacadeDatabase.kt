@@ -1,7 +1,7 @@
-package dao
+package net.wojteksz128.jsoupTest.dao
 
-import model.Computer
-import model.PcSpecDto
+import net.wojteksz128.jsoupTest.model.Computer
+import net.wojteksz128.jsoupTest.model.PcSpecDto
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.Closeable

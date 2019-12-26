@@ -1,4 +1,4 @@
-package dao
+package net.wojteksz128.jsoupTest.dao
 
 import org.jetbrains.exposed.sql.Table
 
