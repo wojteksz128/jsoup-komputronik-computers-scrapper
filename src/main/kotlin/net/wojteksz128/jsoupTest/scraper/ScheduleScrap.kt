@@ -3,17 +3,13 @@ package net.wojteksz128.jsoupTest.scraper
 import net.wojteksz128.jsoupTest.dao.DAOFacadeDatabase
 import net.wojteksz128.jsoupTest.model.PcSpecDto
 import net.wojteksz128.jsoupTest.model.Specification
-import org.jetbrains.exposed.sql.Database
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
-@Component
-class ScheduleScrap {
-
-    val dao = DAOFacadeDatabase(Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver"))
+class ScheduleScrap(private val dao: DAOFacadeDatabase) {
 
     @Scheduled(cron = "0 0-59/5 * * * *")
     fun main() {
