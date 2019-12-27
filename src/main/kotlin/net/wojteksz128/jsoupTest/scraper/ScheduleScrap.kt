@@ -1,13 +1,10 @@
 package net.wojteksz128.jsoupTest.scraper
 
 import net.wojteksz128.jsoupTest.dao.DAOFacadeDatabase
-import net.wojteksz128.jsoupTest.model.PcSpecDto
-import net.wojteksz128.jsoupTest.model.Specification
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
 
 class ScheduleScrap(private val dao: DAOFacadeDatabase) {
 
@@ -20,7 +17,7 @@ class ScheduleScrap(private val dao: DAOFacadeDatabase) {
         fetchPcList(newsHeadlines)
     }
 
-    fun fetchPcList(newsHeadlines: Elements) {
+    private fun fetchPcList(newsHeadlines: Elements) {
         for (headline in newsHeadlines) {
             if (!headline.childNodes().first().toString().startsWith(" {{")) {
                 if (headline.absUrl("href").contains("productVariantGroup")) {
@@ -40,9 +37,9 @@ class ScheduleScrap(private val dao: DAOFacadeDatabase) {
 
     }
 
-    fun getPCSpecsAndInsertToDB(absURL: String, name: String)/*: Computer*/ {
+    private fun getPCSpecsAndInsertToDB(absURL: String, name: String)/*: Computer*/ {
         val doc = Jsoup.connect(absURL).get()
-        var price: Int = 0
+        var price = 0
         val priceTag = doc.select("#p-inner-prices .price")
         for (priceElement in priceTag) {
             if (priceElement.select("span").toString().contains("small")) {
@@ -56,7 +53,7 @@ class ScheduleScrap(private val dao: DAOFacadeDatabase) {
         dao.createComputer(name, absURL, price, specs)
     }
 
-    fun putParametersIntoMap(doc: Document): MutableMap<String, MutableList<String>> {
+    private fun putParametersIntoMap(doc: Document): MutableMap<String, MutableList<String>> {
         val specs: MutableMap<String, MutableList<String>> = mutableMapOf()
         val specHeadlines =
             doc.select("#p-content-specification .full-specification") //tutaj przechodzi do tabeli ze specyfikacją kompa
@@ -68,14 +65,14 @@ class ScheduleScrap(private val dao: DAOFacadeDatabase) {
 
             val tableHeader = headline.select(".section table tr")
             for (tabHeader in tableHeader) {
-                var specDetails: MutableList<String> = ArrayList()
+                val specDetails: MutableList<String> = ArrayList()
                 val specName: String = tabHeader.select("th").text()
                 val spec = tabHeader.select("td")
 
                 if (spec.select("br").size > 1) {
                     if (spec.html().contains("href")) {
-                        for (s in spec.select("br").get(0).parent().children().select("a").html().split("\n")) {
-                            if (!s.equals("")) {
+                        for (s in spec.select("br")[0].parent().children().select("a").html().split("\n")) {
+                            if (s != "") {
                                 specDetails.add(s)
                             }
                         }
@@ -85,34 +82,15 @@ class ScheduleScrap(private val dao: DAOFacadeDatabase) {
                     spec.html().split("<br>")
 
                     for (s in spec.html().split("<br>")) {
-                        if (!s.equals("")) {
+                        if (s != "") {
                             specDetails.add(s)
                         }
                     }
                 } else
-                    specDetails.add(tabHeader.select("td").text());
+                    specDetails.add(tabHeader.select("td").text())
                 specs.putIfAbsent(specName, specDetails)
             }
         }
         return specs
-    }
-
-    /* metoda, której można użyć, żeby przekonwertować listę PcSpecDto na mapę - pole z data klasy Specification */
-    fun convertPcSpecDtoToSpecification(spec: List<PcSpecDto>, pcId: Int): Specification {
-        val parameters: MutableMap<String, MutableList<String>> = mutableMapOf()
-
-        for (param in spec) {
-
-            if (parameters.containsKey(param.attributeName)) {
-                val tmpParamVal: MutableList<String> = parameters.get(param.attributeName)!!
-                tmpParamVal.add(param.attribuiteValue)
-                parameters.replace(param.attributeName, tmpParamVal)
-            } else {
-                var paramValue: MutableList<String> = ArrayList()
-                paramValue.add(param.attribuiteValue)
-                parameters.putIfAbsent(param.attributeName, paramValue)
-            }
-        }
-        return Specification(pcId, parameters)
     }
 }
