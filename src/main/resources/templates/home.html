@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Link</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="pc: ${pcs}">
+                <td th:text="${pc.name}">pc.name</td>
+                <td th:text="${currencyFormatter.invoke(pc.price)}">currencyFormatter(pc.price)</td>
+                <td><a th:href="${pc.url}">Link do komputronik</a></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

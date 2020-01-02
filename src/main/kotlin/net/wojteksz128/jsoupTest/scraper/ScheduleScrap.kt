@@ -1,12 +1,12 @@
 package net.wojteksz128.jsoupTest.scraper
 
-import net.wojteksz128.jsoupTest.dao.DAOFacadeDatabase
+import net.wojteksz128.jsoupTest.dao.DAOFacadePc
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import org.springframework.scheduling.annotation.Scheduled
 
-class ScheduleScrap(private val dao: DAOFacadeDatabase) {
+class ScheduleScrap(private val dao: DAOFacadePc) {
 
     @Scheduled(cron = "0 0-59/5 * * * *")
     fun main() {
