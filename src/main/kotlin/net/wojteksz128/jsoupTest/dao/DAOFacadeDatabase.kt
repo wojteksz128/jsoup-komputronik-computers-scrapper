@@ -8,7 +8,7 @@ import java.io.Closeable
 
 interface DAOFacadePc : Closeable {
     fun init()
-    fun createComputer(name: String, url: String, price: Int, params: Map<String, MutableList<String>>)
+    fun createComputer(name: String, url: String, price: Double, params: Map<String, MutableList<String>>)
     fun createPcParametersList(params: Map<String, MutableList<String>>, pcId: Int)
     fun getAllComputers(): List<Computer>
     fun getPcSpec(pcId: Int): List<PcSpecDto>
@@ -21,7 +21,7 @@ class DAOFacadeDatabase(private val db: Database) : DAOFacadePc {
         SchemaUtils.create(Specifications)
     }
 
-    override fun createComputer(name: String, url: String, price: Int, params: Map<String, MutableList<String>>) =
+    override fun createComputer(name: String, url: String, price: Double, params: Map<String, MutableList<String>>) =
         transaction(db) {
             val pcId = Computers.insert {
                 it[Computers.name] = name; it[Computers.url] = url; it[Computers.price] = price

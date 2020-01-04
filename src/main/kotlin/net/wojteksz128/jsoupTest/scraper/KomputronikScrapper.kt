@@ -17,6 +17,10 @@ interface KomputronikScrapper {
 private const val SCRAPPER_START_ADDRESS = "https://www.komputronik.pl/category/5801/komputery-pc.html"
 private const val BASE_PAGE_WITH_PAGE_NO = "$SCRAPPER_START_ADDRESS?p={0}"
 
+private const val PRODUCT_LIST_ITEM_HEADER_SELECTOR = "#products-list > div .pe2-head a.blank-link"
+
+private const val PAGINATION_ITEM_SELECTOR = ".pagination.sp-top-grey:not([ng-cloak]) a"
+
 class KomputronikScrapperImpl(private val dao: DAOFacadePc) : KomputronikScrapper {
 
     override fun scrap() {
@@ -24,10 +28,8 @@ class KomputronikScrapperImpl(private val dao: DAOFacadePc) : KomputronikScrappe
 
         println(String.masterLabel("Scrapping started"))
 
-        val mainDocument = Jsoup.connect(SCRAPPER_START_ADDRESS).get()
-
-        val pagesNo = getPagesNo(mainDocument)
-        IntStream.rangeClosed(1, pagesNo).parallel().forEach { pageNo -> fetchPCsFromPage(pageNo, scrappyData) }
+        val pagesNo = getPagesNo()
+        IntStream.rangeClosed(1, pagesNo).forEach { pageNo -> fetchPCsFromPage(pageNo, scrappyData) }
 
         println(String.masterLabel("Scrapping ended"))
     }
@@ -38,8 +40,9 @@ class KomputronikScrapperImpl(private val dao: DAOFacadePc) : KomputronikScrappe
         fetchPCsFromDocument(pageDocument, scrappyData)
     }
 
-    private fun getPagesNo(document: Document?): Int {
-        return document?.select(".pagination.sp-top-grey:not([ng-cloak]) a")
+    private fun getPagesNo(): Int {
+        return Jsoup.connect(SCRAPPER_START_ADDRESS).get()
+            ?.select(PAGINATION_ITEM_SELECTOR)
             ?.stream()
             ?.map { it.text().toIntOrNull() }
             ?.filter(Objects::nonNull)
@@ -53,18 +56,15 @@ class KomputronikScrapperImpl(private val dao: DAOFacadePc) : KomputronikScrappe
         mainDocument: Document,
         scrappyData: ScrappyData
     ) {
-        for (headline in mainDocument.select("#products-list > div .pe2-head a.blank-link")) {
-            if (headline.isWebFrameworkLayout()) continue
+        mainDocument.select(PRODUCT_LIST_ITEM_HEADER_SELECTOR).parallelStream().forEach { headline ->
+            if (headline.isWebFrameworkLayout()) return@forEach
 
             if (headline.hasHrefToPCGroup()) {
                 println(String.groupLabel("${headline.childNodes().first()}"))
                 val computerGroupDocument = Jsoup.connect(headline.absUrl("href")).get()
                 fetchPCsFromDocument(computerGroupDocument, scrappyData)
             } else {
-                println(
-                    "${headline.childNodes().first()}\n" +
-                            "\t${headline.absUrl("href")}"
-                )
+                println("${headline.childNodes().first()}\n\t${headline.absUrl("href")}")
                 getPCSpecsAndInsertToDB(headline.absUrl("href"), headline.childNodes().first().toString())
             }
         }
@@ -72,12 +72,12 @@ class KomputronikScrapperImpl(private val dao: DAOFacadePc) : KomputronikScrappe
 
     private fun getPCSpecsAndInsertToDB(absURL: String, name: String)/*: Computer*/ {
         val doc = Jsoup.connect(absURL).get()
-        var price = 0
+        var price = 0.0
         val priceTag = doc.select("#p-inner-prices .price")
         for (priceElement in priceTag) {
             if (priceElement.select("span").toString().contains("small")) {
                 price =
-                    priceElement.select("span.proper").html().replace("&nbsp;", "").substringBefore("<").trim().toInt()
+                    priceElement.select("span.proper").html().replace("&nbsp;", "").substringBefore("<").replace(",", ".").trim().toDouble()
             }
         }
         val specs: MutableMap<String, MutableList<String>> =
