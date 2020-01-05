@@ -7,7 +7,6 @@ import net.wojteksz128.jsoupTest.scraper.KomputronikScrapperImpl
 import net.wojteksz128.jsoupTest.scraper.ScrapperScheduler
 import org.jetbrains.exposed.sql.Database
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -22,7 +21,7 @@ open class ApplicationConfiguration {
 
 
     @Bean
-    open fun komputronikScrapper(dao: DAOFacadePc): KomputronikScrapper = KomputronikScrapperImpl(dao)
+    open fun komputronikScrapper(dao: DAOFacadePc): KomputronikScrapper = KomputronikScrapperImpl()
 
     @Bean
     open fun daoFacadeDatabase(): DAOFacadePc {
