@@ -1,0 +1,11 @@
+package net.wojteksz128.jsoupTest.database
+
+import net.wojteksz128.jsoupTest.model.ComputerSpecification
+import net.wojteksz128.jsoupTest.model.ComputerSpecificationAssignation
+import net.wojteksz128.jsoupTest.model.ComputerSpecificationValue
+
+interface ComputerSpecificationsFacade : DatabaseFacade<ComputerSpecification>
+
+interface ComputerSpecificationValuesFacade : DatabaseFacade<ComputerSpecificationValue>
+
+interface ComputerSpecificationAssignationFacade : DatabaseFacade<ComputerSpecificationAssignation>

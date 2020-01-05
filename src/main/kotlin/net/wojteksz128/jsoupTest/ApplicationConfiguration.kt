@@ -1,41 +1,64 @@
 package net.wojteksz128.jsoupTest
 
-import net.wojteksz128.jsoupTest.dao.DAOFacadeDatabase
-import net.wojteksz128.jsoupTest.dao.DAOFacadePc
+import net.wojteksz128.jsoupTest.database.*
 import net.wojteksz128.jsoupTest.scraper.KomputronikScrapper
 import net.wojteksz128.jsoupTest.scraper.KomputronikScrapperImpl
 import net.wojteksz128.jsoupTest.scraper.ScrapperScheduler
 import org.jetbrains.exposed.sql.Database
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 open class ApplicationConfiguration {
-
-    @Value("\${datasource.url}")
-    private lateinit var url: String
-
-    @Value("\${datasource.driver-class-name}")
-    private lateinit var driver: String
-
+    @Bean
+    open fun komputronikScrapper(): KomputronikScrapper = KomputronikScrapperImpl()
 
     @Bean
-    open fun komputronikScrapper(dao: DAOFacadePc): KomputronikScrapper = KomputronikScrapperImpl()
+    open fun scrapperScheduler(komputronikScrapper: KomputronikScrapper, appDatabase: AppDatabase) =
+        ScrapperScheduler(komputronikScrapper, appDatabase)
 
     @Bean
-    open fun daoFacadeDatabase(): DAOFacadePc {
-        val database = DAOFacadeDatabase(Database.connect(url, driver))
-        database.init()
-        return database
-    }
+    open fun runScrapper(komputronikScrapper: KomputronikScrapper, appDatabase: AppDatabase) =
+        CommandLineRunner {
+            val scrappyData = komputronikScrapper.scrap()
+            appDatabase.store(scrappyData)
+        }
 
     @Bean
-    open fun runBenchmark(komputronikScrapper: KomputronikScrapper): CommandLineRunner {
-        return CommandLineRunner { komputronikScrapper.scrap() }
-    }
+    open fun databaseConnection(
+        @Value("\${datasource.url}") url: String,
+        @Value("\${datasource.driver-class-name}") driver: String
+    ) = Database.connect(url, driver)
 
     @Bean
-    open fun scrapperScheduler(komputronikScrapper: KomputronikScrapper): ScrapperScheduler =
-        ScrapperScheduler(komputronikScrapper)
+    open fun appDatabase(
+        databaseConnection: Database,
+        computersFacade: ComputersFacade,
+        computerSpecificationsFacade: ComputerSpecificationsFacade,
+        computerSpecificationValuesFacade: ComputerSpecificationValuesFacade,
+        computerSpecificationAssignationFacade: ComputerSpecificationAssignationFacade
+    ) = AppDatabase(
+        databaseConnection,
+        computersFacade,
+        computerSpecificationsFacade,
+        computerSpecificationValuesFacade,
+        computerSpecificationAssignationFacade
+    )
+
+    @Bean
+    open fun computersFacade(databaseConnection: Database): ComputersFacade = ComputersFacadeImpl(databaseConnection)
+
+    @Bean
+    open fun computersSpecificationsFacade(databaseConnection: Database): ComputerSpecificationsFacade =
+        ComputerSpecificationsFacadeImpl(databaseConnection)
+
+    @Bean
+    open fun computerSpecificationValuesFacade(databaseConnection: Database): ComputerSpecificationValuesFacade =
+        ComputerSpecificationValuesFacadeImpl(databaseConnection)
+
+    @Bean
+    open fun computerSpecificationAssignationFacade(databaseConnection: Database): ComputerSpecificationAssignationFacade =
+        ComputerSpecificationAssignationFacadeImpl(databaseConnection)
 }

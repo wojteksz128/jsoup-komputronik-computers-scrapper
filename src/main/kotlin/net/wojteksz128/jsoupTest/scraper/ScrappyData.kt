@@ -11,4 +11,29 @@ data class ScrappyData(
     var computers: MutableSet<Computer> = mutableSetOf(),
     val properties: MutableSet<ComputerSpecification> = mutableSetOf(),
     val propertiesPossibleValues: MutableMap<ComputerSpecification, MutableSet<ComputerSpecificationValue>> = mutableMapOf()
-)
+) {
+    fun addOrGetProperty(specification: ComputerSpecification): ComputerSpecification {
+        return if (!properties.contains(specification)) {
+            properties += specification
+            specification
+        } else
+            properties.stream().filter { it == specification }.findFirst().orElseThrow { Exception() }
+    }
+
+    fun addOrGetPropertyValue(
+        specification: ComputerSpecification,
+        specificationValue: ComputerSpecificationValue
+    ): ComputerSpecificationValue {
+        if (propertiesPossibleValues.containsKey(specification).not())
+            propertiesPossibleValues[specification] = mutableSetOf()
+
+        val possibleSpecificationValues = propertiesPossibleValues[specification]!!
+        if (specificationValue in possibleSpecificationValues)
+            return possibleSpecificationValues.stream().filter { it == specificationValue }.findFirst()
+                .orElseThrow { Exception() }
+        else {
+            possibleSpecificationValues += specificationValue
+            return specificationValue
+        }
+    }
+}

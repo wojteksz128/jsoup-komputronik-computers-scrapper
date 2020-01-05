@@ -94,18 +94,21 @@ class KomputronikScrapperImpl : KomputronikScrapper {
         return price
     }
 
-    private fun readAllSpecs(doc: Document, computer: Computer, scrappyData: ScrappyData): Iterable<ComputerSpecificationAssignation> {
+    private fun readAllSpecs(
+        doc: Document,
+        computer: Computer,
+        scrappyData: ScrappyData
+    ): Iterable<ComputerSpecificationAssignation> {
         val specs: MutableSet<ComputerSpecificationAssignation> = mutableSetOf()
         val specTables = doc.select(FULL_PRODUCT_SPECIFICATION_SELECTOR)
 
-        // Pobierz ze wszystkich tabel specyfikacje
         for (specTable in specTables) {
             if (specTable.toString().contains("ng-")) continue
 
             for (tableSpecRow in specTable.select(".section table tr")) {
                 val specification = getAndAddSpec(tableSpecRow, scrappyData)
                 val value = getAndAddSpecValues(tableSpecRow, specification, scrappyData)
-                specs.add(ComputerSpecificationAssignation.newInstance(computer, specification, value))
+                value.forEach { specs.add(ComputerSpecificationAssignation.newInstance(computer, specification, it)) }
             }
         }
         return specs
@@ -113,10 +116,7 @@ class KomputronikScrapperImpl : KomputronikScrapper {
 
     private fun getAndAddSpec(tableSpecRow: Element, scrappyData: ScrappyData): ComputerSpecification {
         val specName = tableSpecRow.select("th").text().trim()
-        val specification = ComputerSpecification.newInstance(specName)
-
-        scrappyData.properties.add(specification)
-        return specification
+        return scrappyData.addOrGetProperty(ComputerSpecification.newInstance(specName))
     }
 
     private fun getAndAddSpecValues(
@@ -133,14 +133,13 @@ class KomputronikScrapperImpl : KomputronikScrapper {
             else specValuesCell.html().split("<br>")
 
             for (value in valueList)
-                if (value.isNotEmpty())
-                    specValues.add(ComputerSpecificationValue.newInstance(specification, value))
+                if (value.trim().isNotEmpty()) specValues += scrappyData.addOrGetPropertyValue(specification,
+                    ComputerSpecificationValue.newInstance(specification, value.trim())
+                )
 
-        } else specValues.add(ComputerSpecificationValue.newInstance(specification, specValuesCell.text()))
-
-        if (scrappyData.propertiesPossibleValues.containsKey(specification))
-            scrappyData.propertiesPossibleValues[specification] = specValues
-        else scrappyData.propertiesPossibleValues[specification]?.addAll(specValues)
+        } else specValues += scrappyData.addOrGetPropertyValue(specification,
+            ComputerSpecificationValue.newInstance(specification, specValuesCell.text().trim())
+        )
 
         return specValues
     }
