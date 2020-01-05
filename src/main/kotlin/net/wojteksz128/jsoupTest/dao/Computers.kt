@@ -7,4 +7,5 @@ object Computers : Table() {
     val name = varchar("name", 100)
     val url = varchar("url", 100)
     val price = double("price")
+    val scrapInstanceId = integer("scrapInstanceId") references ScrapInstances.id
 }

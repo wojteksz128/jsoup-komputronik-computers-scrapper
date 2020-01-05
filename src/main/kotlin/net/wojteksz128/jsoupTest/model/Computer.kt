@@ -5,16 +5,14 @@ data class Computer(
     var name: String,
     var url: String,
     var price: Double?,
-    var specs: MutableSet<ComputerSpecificationAssignation>
+    var specs: MutableSet<ComputerSpecificationAssignation>,
+    var scrapInstance: ScrapInstance
 ) {
+    constructor(name: String, url: String, scrapInstance: ScrapInstance)
+            : this(null, name, url, null, mutableSetOf(), scrapInstance)
 
-
-
-    companion object {
-        fun newInstance(name: String, url: String) = Computer(null, name, url, null, mutableSetOf())
-        fun newInstance(id: Int, name: String, url: String, price: Double) =
-            Computer(id, name, url, price, mutableSetOf())
-    }
+    constructor(id: Int, name: String, url: String, price: Double, scrapInstance: ScrapInstance)
+            : this(id, name, url, price, mutableSetOf(), scrapInstance)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -26,6 +24,7 @@ data class Computer(
         if (name != other.name) return false
         if (url != other.url) return false
         if (price != other.price) return false
+        if (scrapInstance != other.scrapInstance) return false
 
         return true
     }
@@ -35,6 +34,7 @@ data class Computer(
         result = 31 * result + name.hashCode()
         result = 31 * result + url.hashCode()
         result = 31 * result + (price?.hashCode() ?: 0)
+        result = 31 * result + scrapInstance.hashCode()
         return result
     }
 }

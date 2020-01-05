@@ -7,11 +7,11 @@ import net.wojteksz128.jsoupTest.model.ComputerSpecification
 import net.wojteksz128.jsoupTest.model.ComputerSpecificationAssignation
 import net.wojteksz128.jsoupTest.model.ComputerSpecificationValue
 import net.wojteksz128.jsoupTest.stepLabel
+import org.joda.time.DateTime
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.text.MessageFormat.format
-import java.time.LocalDateTime
 import java.util.*
 import java.util.stream.IntStream
 
@@ -29,11 +29,11 @@ private const val FULL_PRODUCT_SPECIFICATION_SELECTOR = "#p-content-specificatio
 class KomputronikScrapperImpl : KomputronikScrapper {
 
     override fun scrap(): ScrappyData {
-        val scrappyData = ScrappyData(LocalDateTime.now())
+        val scrappyData = ScrappyData(DateTime.now())
 
         println("Scrapping started".masterLabel())
         IntStream.rangeClosed(1, getPagesNo()).forEach { pageNo -> fetchPCsFromPage(pageNo, scrappyData) }
-        scrappyData.endDate = LocalDateTime.now()
+        scrappyData.scrapInstance.endDate = DateTime.now()
         println("Scrapping ended".masterLabel())
 
         return scrappyData
@@ -71,9 +71,10 @@ class KomputronikScrapperImpl : KomputronikScrapper {
             val computerGroupDocument = Jsoup.connect(headline.absUrl("href")).get()
             fetchPCsFromDocument(computerGroupDocument, scrappyData)
         } else {
-            val computer = Computer.newInstance(headline.childNodes().first().toString(), headline.absUrl("href"))
+            val computer =
+                Computer(headline.childNodes().first().toString(), headline.absUrl("href"), scrappyData.scrapInstance)
             println("${computer.name}\n\t${computer.url}")
-            scrappyData.computers.add(computer)
+            scrappyData.scrapInstance.computers.add(computer)
             fetchPCInformation(computer, scrappyData)
         }
     }
@@ -136,11 +137,13 @@ class KomputronikScrapperImpl : KomputronikScrapper {
             else specValuesCell.html().split("<br>")
 
             for (value in valueList)
-                if (value.trim().isNotEmpty()) specValues += scrappyData.addOrGetPropertyValue(specification,
+                if (value.trim().isNotEmpty()) specValues += scrappyData.addOrGetPropertyValue(
+                    specification,
                     ComputerSpecificationValue.newInstance(specification, value.trim())
                 )
 
-        } else specValues += scrappyData.addOrGetPropertyValue(specification,
+        } else specValues += scrappyData.addOrGetPropertyValue(
+            specification,
             ComputerSpecificationValue.newInstance(specification, specValuesCell.text().trim())
         )
 

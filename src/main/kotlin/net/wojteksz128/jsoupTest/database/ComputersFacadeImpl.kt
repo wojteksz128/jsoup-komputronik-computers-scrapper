@@ -5,7 +5,10 @@ import net.wojteksz128.jsoupTest.model.Computer
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class ComputersFacadeImpl(private val databaseConnection: Database) : ComputersFacade {
+class ComputersFacadeImpl(
+    private val databaseConnection: Database,
+    private val scrapInstancesFacade: ScrapInstancesFacade
+) : ComputersFacade {
     init {
         transaction(databaseConnection) {
             SchemaUtils.create(Computers)
@@ -14,7 +17,15 @@ class ComputersFacadeImpl(private val databaseConnection: Database) : ComputersF
 
     override fun getAll(): Iterable<Computer> = transaction(databaseConnection) {
         Computers.selectAll()
-            .map { Computer.newInstance(it[Computers.id], it[Computers.name], it[Computers.url], it[Computers.price]) }
+            .map {
+                Computer(
+                    it[Computers.id],
+                    it[Computers.name],
+                    it[Computers.url],
+                    it[Computers.price],
+                    scrapInstancesFacade.getById(it[Computers.scrapInstanceId])
+                )
+            }
     }
 
     override fun save(obj: Computer) = transaction(databaseConnection) {
@@ -24,6 +35,7 @@ class ComputersFacadeImpl(private val databaseConnection: Database) : ComputersF
             it[name] = obj.name
             it[price] = obj.price!!
             it[url] = obj.url
+            it[scrapInstanceId] = obj.scrapInstance.id!!
         } get Computers.id
         obj.id = computerId
     }
