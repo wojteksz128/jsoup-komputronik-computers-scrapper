@@ -1,9 +1,12 @@
 package net.wojteksz128.jsoupTest.scraper
 
+import net.wojteksz128.jsoupTest.groupLabel
+import net.wojteksz128.jsoupTest.masterLabel
 import net.wojteksz128.jsoupTest.model.Computer
 import net.wojteksz128.jsoupTest.model.ComputerSpecification
 import net.wojteksz128.jsoupTest.model.ComputerSpecificationAssignation
 import net.wojteksz128.jsoupTest.model.ComputerSpecificationValue
+import net.wojteksz128.jsoupTest.stepLabel
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -28,10 +31,10 @@ class KomputronikScrapperImpl : KomputronikScrapper {
     override fun scrap(): ScrappyData {
         val scrappyData = ScrappyData(LocalDateTime.now())
 
-        println(String.masterLabel("Scrapping started"))
+        println("Scrapping started".masterLabel())
         IntStream.rangeClosed(1, getPagesNo()).forEach { pageNo -> fetchPCsFromPage(pageNo, scrappyData) }
         scrappyData.endDate = LocalDateTime.now()
-        println(String.masterLabel("Scrapping ended"))
+        println("Scrapping ended".masterLabel())
 
         return scrappyData
     }
@@ -49,7 +52,7 @@ class KomputronikScrapperImpl : KomputronikScrapper {
     }
 
     private fun fetchPCsFromPage(pageNo: Int, scrappyData: ScrappyData) {
-        println(String.masterLabel("Page $pageNo"))
+        println("Page $pageNo".stepLabel())
         val pageDocument = Jsoup.connect(format(BASE_PAGE_WITH_PAGE_NO, pageNo)).get()
         fetchPCsFromDocument(pageDocument, scrappyData)
     }
@@ -64,7 +67,7 @@ class KomputronikScrapperImpl : KomputronikScrapper {
         if (headline.isWebFrameworkLayout()) return
 
         if (headline.hasHrefToPCGroup()) {
-            println(String.groupLabel("${headline.childNodes().first()}"))
+            println("${headline.childNodes().first()}".groupLabel())
             val computerGroupDocument = Jsoup.connect(headline.absUrl("href")).get()
             fetchPCsFromDocument(computerGroupDocument, scrappyData)
         } else {
@@ -144,16 +147,6 @@ class KomputronikScrapperImpl : KomputronikScrapper {
         return specValues
     }
 }
-
-private fun String.Companion.masterLabel(text: String) = "\n" +
-        "==================================================\n" +
-        "${text}\n" +
-        "==================================================\n"
-
-private fun String.Companion.groupLabel(text: String) = "\n" +
-        "--------------------------------------------------\n" +
-        "${text}\n" +
-        "--------------------------------------------------\n"
 
 private fun Element.isWebFrameworkLayout() = childNodes().first().toString().startsWith(" {{")
 
