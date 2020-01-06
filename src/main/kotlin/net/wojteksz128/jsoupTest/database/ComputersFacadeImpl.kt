@@ -28,6 +28,19 @@ class ComputersFacadeImpl(
             }
     }
 
+    override fun getAllForLastScrap(): Iterable<Computer> = transaction(databaseConnection) {
+        Computers.select { Computers.scrapInstanceId eq scrapInstancesFacade.getLastScrapInstance().id!! }
+            .map {
+                Computer(
+                    it[Computers.id],
+                    it[Computers.name],
+                    it[Computers.url],
+                    it[Computers.price],
+                    scrapInstancesFacade.getById(it[Computers.scrapInstanceId])
+                )
+            }
+    }
+
     override fun save(obj: Computer) = transaction(databaseConnection) {
         check(obj.id == null) { "Computer probably already inserted (have id)." }
 

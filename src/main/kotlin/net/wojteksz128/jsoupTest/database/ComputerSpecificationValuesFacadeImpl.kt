@@ -2,6 +2,7 @@ package net.wojteksz128.jsoupTest.database
 
 import net.wojteksz128.jsoupTest.dao.ComputerSpecificationValues
 import net.wojteksz128.jsoupTest.dao.Computers
+import net.wojteksz128.jsoupTest.model.ComputerSpecification
 import net.wojteksz128.jsoupTest.model.ComputerSpecificationValue
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -13,6 +14,18 @@ class ComputerSpecificationValuesFacadeImpl(private val databaseConnection: Data
             SchemaUtils.create(ComputerSpecificationValues)
         }
     }
+
+    override fun getAllBySpecification(specification: ComputerSpecification): Iterable<ComputerSpecificationValue> =
+        transaction(databaseConnection) {
+            ComputerSpecificationValues.select { ComputerSpecificationValues.specificationId eq specification.id!! }
+                .map {
+                    ComputerSpecificationValue(
+                        it[ComputerSpecificationValues.id],
+                        specification,
+                        it[ComputerSpecificationValues.name]
+                    )
+                }.toSet()
+        }
 
     override fun save(obj: ComputerSpecificationValue) = transaction(databaseConnection) {
         check(obj.id == null) { "Computer specification value probably already inserted (have id)." }

@@ -4,4 +4,5 @@ import net.wojteksz128.jsoupTest.model.Computer
 
 interface ComputersFacade : DatabaseFacade<Computer> {
     fun getAll(): Iterable<Computer>
+    fun getAllForLastScrap(): Iterable<Computer>
 }

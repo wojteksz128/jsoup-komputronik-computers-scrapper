@@ -15,11 +15,15 @@ data class ScrappyData(
             : this(ScrapInstance(createDate), mutableSetOf(), mutableMapOf())
 
     fun addOrGetProperty(specification: ComputerSpecification): ComputerSpecification {
-        return if (specification in properties)
-            properties.stream().filter { it == specification }.findFirst().orElseThrow { Exception() }
-        else {
-            properties += specification
-            specification
+        synchronized(properties) {
+            return if (specification in properties)
+                properties.stream().filter { it == specification }.findFirst().orElseThrow { Exception() }
+            else {
+                synchronized(properties) {
+                    properties += specification
+                }
+                specification
+            }
         }
     }
 
@@ -27,16 +31,18 @@ data class ScrappyData(
         specification: ComputerSpecification,
         specificationValue: ComputerSpecificationValue
     ): ComputerSpecificationValue {
-        if (propertiesPossibleValues.containsKey(specification).not())
-            propertiesPossibleValues[specification] = mutableSetOf()
+        synchronized(propertiesPossibleValues) {
+            if (propertiesPossibleValues.containsKey(specification).not())
+                propertiesPossibleValues[specification] = mutableSetOf()
 
-        val possibleSpecificationValues = propertiesPossibleValues[specification]!!
-        return if (specificationValue in possibleSpecificationValues)
-            possibleSpecificationValues.stream().filter { it == specificationValue }.findFirst()
-                .orElseThrow { Exception() }
-        else {
-            possibleSpecificationValues += specificationValue
-            specificationValue
+            val possibleSpecificationValues = propertiesPossibleValues[specification]!!
+            return if (specificationValue in possibleSpecificationValues)
+                possibleSpecificationValues.stream().filter { it == specificationValue }.findFirst()
+                    .orElseThrow { Exception() }
+            else {
+                possibleSpecificationValues += specificationValue
+                specificationValue
+            }
         }
     }
 }

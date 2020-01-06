@@ -112,7 +112,7 @@ class KomputronikScrapperImpl : KomputronikScrapper {
             for (tableSpecRow in specTable.select(".section table tr")) {
                 val specification = getAndAddSpec(tableSpecRow, scrappyData)
                 val value = getAndAddSpecValues(tableSpecRow, specification, scrappyData)
-                value.forEach { specs.add(ComputerSpecificationAssignation.newInstance(computer, specification, it)) }
+                value.forEach { specs.add(ComputerSpecificationAssignation(computer, specification, it)) }
             }
         }
         return specs
@@ -120,7 +120,7 @@ class KomputronikScrapperImpl : KomputronikScrapper {
 
     private fun getAndAddSpec(tableSpecRow: Element, scrappyData: ScrappyData): ComputerSpecification {
         val specName = tableSpecRow.select("th").text().trim()
-        return scrappyData.addOrGetProperty(ComputerSpecification.newInstance(specName))
+        return scrappyData.addOrGetProperty(ComputerSpecification(specName))
     }
 
     private fun getAndAddSpecValues(
@@ -139,12 +139,12 @@ class KomputronikScrapperImpl : KomputronikScrapper {
             for (value in valueList)
                 if (value.trim().isNotEmpty()) specValues += scrappyData.addOrGetPropertyValue(
                     specification,
-                    ComputerSpecificationValue.newInstance(specification, value.trim())
+                    ComputerSpecificationValue(specification, value.trim())
                 )
 
         } else specValues += scrappyData.addOrGetPropertyValue(
             specification,
-            ComputerSpecificationValue.newInstance(specification, specValuesCell.text().trim())
+            ComputerSpecificationValue(specification, specValuesCell.text().trim())
         )
 
         return specValues

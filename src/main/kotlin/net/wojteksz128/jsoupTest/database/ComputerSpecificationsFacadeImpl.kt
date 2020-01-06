@@ -5,11 +5,29 @@ import net.wojteksz128.jsoupTest.model.ComputerSpecification
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class ComputerSpecificationsFacadeImpl(private val databaseConnection: Database) : ComputerSpecificationsFacade {
+class ComputerSpecificationsFacadeImpl(
+    private val databaseConnection: Database,
+    private val specificationValuesFacade: ComputerSpecificationValuesFacade
+) : ComputerSpecificationsFacade {
     init {
         transaction(databaseConnection) {
             SchemaUtils.create(ComputerSpecifications)
         }
+    }
+
+    override fun getAllWithPotentialValues(): Iterable<ComputerSpecification> = transaction(databaseConnection) {
+        val specifications = ComputerSpecifications.selectAll()
+            .map {
+                ComputerSpecification(
+                    it[ComputerSpecifications.id],
+                    it[ComputerSpecifications.name],
+                    null
+                )
+            }
+
+        specifications.forEach { it.values = specificationValuesFacade.getAllBySpecification(it).toSet() }
+
+        return@transaction specifications.toSet()
     }
 
     override fun save(obj: ComputerSpecification) = transaction(databaseConnection) {

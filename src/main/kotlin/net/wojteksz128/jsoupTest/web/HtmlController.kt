@@ -12,7 +12,8 @@ class HtmlController(private val appDatabase: AppDatabase) {
 
     @GetMapping("/")
     fun home(model: Model): String {
-        model["pcs"] = appDatabase.computers.getAll()
+        model["pcs"] = appDatabase.computers.getAllForLastScrap()
+        model["filters"] = appDatabase.specifications.getAllWithPotentialValues()
         val function = { price: Int -> NumberFormat.getCurrencyInstance().format(price) }
         model["currencyFormatter"] = function
         return "home"

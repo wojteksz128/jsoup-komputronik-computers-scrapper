@@ -5,6 +5,14 @@
     <title>Title</title>
 </head>
 <body>
+    <div id="filters">
+        <div class="filter-body" th:each="filter: ${filters}">
+            <span th:text="${filter.name}">filter.name</span>
+            <ul>
+                <li th:each="value : ${filter.values}" th:text="${value.name}"></li>
+            </ul>
+        </div>
+    </div>
     <table>
         <thead>
             <tr>

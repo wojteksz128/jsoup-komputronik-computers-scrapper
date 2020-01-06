@@ -12,6 +12,12 @@ class ScrapInstancesFacadeImpl(private val databaseConnection: Database) : Scrap
             .first()
     }
 
+    override fun getLastScrapInstance(): ScrapInstance = transaction(databaseConnection) {
+        ScrapInstances.selectAll().orderBy(ScrapInstances.createDate, SortOrder.DESC)
+            .map { ScrapInstance(it[ScrapInstances.id], it[ScrapInstances.createDate], it[ScrapInstances.endDate]) }
+            .first()
+    }
+
     override fun save(obj: ScrapInstance) = transaction(databaseConnection) {
         check(obj.id == null) { "Computer probably already inserted (have id)." }
 
