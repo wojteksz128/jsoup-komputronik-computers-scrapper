@@ -50,27 +50,19 @@ open class ApplicationConfiguration {
     )
 
     @Bean
-    open fun computersFacade(
-        databaseConnection: Database,
-        scrapInstancesFacade: ScrapInstancesFacade
-    ): ComputersFacade = ComputersFacadeImpl(databaseConnection, scrapInstancesFacade)
+    open fun computersFacade(): ComputersFacade = ComputersFacadeImpl()
 
     @Bean
-    open fun scrapInstancesFacade(databaseConnection: Database): ScrapInstancesFacade =
-        ScrapInstancesFacadeImpl(databaseConnection)
+    open fun scrapInstancesFacade(): ScrapInstancesFacade = ScrapInstancesFacadeImpl()
 
     @Bean
-    open fun computersSpecificationsFacade(
-        databaseConnection: Database,
-        specificationValuesFacade: ComputerSpecificationValuesFacade
-    ): ComputerSpecificationsFacade =
-        ComputerSpecificationsFacadeImpl(databaseConnection, specificationValuesFacade)
+    open fun computersSpecificationsFacade(): ComputerSpecificationsFacade = ComputerSpecificationsFacadeImpl()
 
     @Bean
-    open fun computerSpecificationValuesFacade(databaseConnection: Database): ComputerSpecificationValuesFacade =
-        ComputerSpecificationValuesFacadeImpl(databaseConnection)
+    open fun computerSpecificationValuesFacade(): ComputerSpecificationValuesFacade =
+        ComputerSpecificationValuesFacadeImpl()
 
     @Bean
-    open fun computerSpecificationAssignationFacade(databaseConnection: Database): ComputerSpecificationAssignationFacade =
-        ComputerSpecificationAssignationFacadeImpl(databaseConnection)
+    open fun computerSpecificationAssignationFacade(): ComputerSpecificationAssignationFacade =
+        ComputerSpecificationAssignationFacadeImpl()
 }

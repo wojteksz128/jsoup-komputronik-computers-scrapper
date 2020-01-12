@@ -5,14 +5,18 @@
     <title>Title</title>
 </head>
 <body>
-    <div id="filters">
+    <form id="filters" action="/">
         <div class="filter-body" th:each="filter: ${filters}">
-            <span th:text="${filter.name}">filter.name</span>
-            <ul>
-                <li th:each="value : ${filter.values}" th:text="${value.name}"></li>
+            <button type="submit">Filtruj</button>
+            <label th:for="${'s' + filter.id}" th:text="${filter.name}">filter.name</label>
+            <ul th:id="${'s' + filter.id}">
+                <li th:each="value : ${filter.values}">
+                    <input type="checkbox" name="specValue" th:value="${value.id}" th:text="${value.name}" />
+                </li>
             </ul>
+            <button type="submit">Filtruj</button>
         </div>
-    </div>
+    </form>
     <table>
         <thead>
             <tr>

@@ -5,40 +5,34 @@ import net.wojteksz128.jsoupTest.model.ComputerSpecification
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class ComputerSpecificationsFacadeImpl(
-    private val databaseConnection: Database,
-    private val specificationValuesFacade: ComputerSpecificationValuesFacade
-) : ComputerSpecificationsFacade {
-    init {
-        transaction(databaseConnection) {
-            SchemaUtils.create(ComputerSpecifications)
-        }
-    }
+class ComputerSpecificationsFacadeImpl : ComputerSpecificationsFacade {
+    override lateinit var appDatabase: AppDatabase
 
-    override fun getAllWithPotentialValues(): Iterable<ComputerSpecification> = transaction(databaseConnection) {
+    override fun getAllWithPotentialValues() = transaction(appDatabase.database) {
         val specifications = ComputerSpecifications.selectAll()
-            .map {
-                ComputerSpecification(
-                    it[ComputerSpecifications.id],
-                    it[ComputerSpecifications.name],
-                    null
-                )
-            }
+            .map { mapToFullObject(it) }
 
-        specifications.forEach { it.values = specificationValuesFacade.getAllBySpecification(it).toSet() }
+        specifications.forEach { it.values = appDatabase.specificationsValues.getAllBySpecification(it).toSet() }
 
-        return@transaction specifications.toSet()
+        return@transaction specifications
     }
 
-    override fun save(obj: ComputerSpecification) = transaction(databaseConnection) {
+    override fun getById(id: Int) = transaction(appDatabase.database) {
+        ComputerSpecifications.select { ComputerSpecifications.id eq id }.map { mapToFullObject(it) }.first()
+    }
+
+    override fun getAllByIds(ids: Iterable<Int>) = transaction(appDatabase.database) {
+        ComputerSpecifications.select { ComputerSpecifications.id inList ids }.map { mapToFullObject(it) }
+    }
+
+    private fun mapToFullObject(it: ResultRow) =
+        ComputerSpecification(it[ComputerSpecifications.id].value, it[ComputerSpecifications.name], null)
+
+    override fun save(obj: ComputerSpecification) = transaction(appDatabase.database) {
         check(obj.id == null) { "Computer specification probably already inserted (have id)." }
 
         val specificationId = ComputerSpecifications.insert { it[name] = obj.name } get ComputerSpecifications.id
-        obj.id = specificationId
-    }
-
-    override fun save(collection: Iterable<ComputerSpecification>) = transaction {
-        collection.forEach { save(it) }
+        obj.id = specificationId.value
     }
 
     override fun update(obj: ComputerSpecification) {
@@ -50,21 +44,10 @@ class ComputerSpecificationsFacadeImpl(
         check(updatedRecordsNo == 1) { "Computer specification with id=${obj.id} not found" }
     }
 
-    override fun update(collection: Iterable<ComputerSpecification>) = transaction {
-        collection.forEach { update(it) }
-    }
-
-    override fun delete(obj: ComputerSpecification) = transaction(databaseConnection) {
+    override fun delete(obj: ComputerSpecification) = transaction(appDatabase.database) {
         check(obj.id != null) { "Computer specification probably never inserted (not have id)" }
 
         val deletedRecordsNo = ComputerSpecifications.deleteWhere { ComputerSpecifications.id eq obj.id!! }
         check(deletedRecordsNo == 1) { "Computer specification with id=${obj.id} not found" }
-    }
-
-    override fun delete(collection: Iterable<ComputerSpecification>) = transaction {
-        collection.forEach { delete(it) }
-    }
-
-    override fun close() {
     }
 }

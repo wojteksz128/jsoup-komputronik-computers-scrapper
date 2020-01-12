@@ -1,9 +1,12 @@
 package net.wojteksz128.jsoupTest.database
 
+import net.wojteksz128.jsoupTest.dao.*
 import net.wojteksz128.jsoupTest.masterLabel
 import net.wojteksz128.jsoupTest.scraper.ScrappyData
 import net.wojteksz128.jsoupTest.stepLabel
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.stream.Collectors
 
 class AppDatabase(
@@ -14,6 +17,23 @@ class AppDatabase(
     val specificationsValues: ComputerSpecificationValuesFacade,
     val specificationsAssignations: ComputerSpecificationAssignationFacade
 ) {
+    init {
+        computers.appDatabase = this
+        scrapInstances.appDatabase = this
+        specifications.appDatabase = this
+        specificationsValues.appDatabase = this
+        specificationsAssignations.appDatabase = this
+
+        transaction(database) {
+            SchemaUtils.create(
+                Computers,
+                ScrapInstances,
+                ComputerSpecifications,
+                ComputerSpecificationValues,
+                ComputerSpecificationValuesAssignations
+            )
+        }
+    }
 
     fun store(scrappyData: ScrappyData) {
         println("Store scrapped data into database".masterLabel())

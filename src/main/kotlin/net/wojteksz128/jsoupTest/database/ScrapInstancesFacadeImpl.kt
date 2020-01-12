@@ -5,20 +5,26 @@ import net.wojteksz128.jsoupTest.model.ScrapInstance
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class ScrapInstancesFacadeImpl(private val databaseConnection: Database) : ScrapInstancesFacade {
-    override fun getById(id: Int): ScrapInstance = transaction(databaseConnection) {
-        ScrapInstances.select { ScrapInstances.id eq id }
-            .map { ScrapInstance(it[ScrapInstances.id], it[ScrapInstances.createDate], it[ScrapInstances.endDate]) }
+class ScrapInstancesFacadeImpl : ScrapInstancesFacade {
+    override lateinit var appDatabase: AppDatabase
+
+    override fun getById(id: Int) = transaction(appDatabase.database) {
+        ScrapInstances.select { ScrapInstances.id eq id }.map { mapToFullObject(it) }.first()
+    }
+
+    override fun getAllByIds(ids: Iterable<Int>) = transaction(appDatabase.database) {
+        ScrapInstances.select { ScrapInstances.id inList ids }.map { mapToFullObject(it) }
+    }
+
+    override fun getLastScrapInstance(): ScrapInstance = transaction(appDatabase.database) {
+        ScrapInstances.selectAll().orderBy(ScrapInstances.createDate, SortOrder.DESC).map { mapToFullObject(it) }
             .first()
     }
 
-    override fun getLastScrapInstance(): ScrapInstance = transaction(databaseConnection) {
-        ScrapInstances.selectAll().orderBy(ScrapInstances.createDate, SortOrder.DESC)
-            .map { ScrapInstance(it[ScrapInstances.id], it[ScrapInstances.createDate], it[ScrapInstances.endDate]) }
-            .first()
-    }
+    private fun mapToFullObject(it: ResultRow) =
+        ScrapInstance(it[ScrapInstances.id].value, it[ScrapInstances.createDate], it[ScrapInstances.endDate])
 
-    override fun save(obj: ScrapInstance) = transaction(databaseConnection) {
+    override fun save(obj: ScrapInstance) = transaction(appDatabase.database) {
         check(obj.id == null) { "Computer probably already inserted (have id)." }
 
         val scrapInstanceId = ScrapInstances.insert {
@@ -26,14 +32,10 @@ class ScrapInstancesFacadeImpl(private val databaseConnection: Database) : Scrap
             it[endDate] = obj.endDate!!
             it[computersNo] = obj.computers.size
         } get ScrapInstances.id
-        obj.id = scrapInstanceId
+        obj.id = scrapInstanceId.value
     }
 
-    override fun save(collection: Iterable<ScrapInstance>) = transaction {
-        collection.forEach { save(it) }
-    }
-
-    override fun update(obj: ScrapInstance) {
+    override fun update(obj: ScrapInstance) = transaction(appDatabase.database) {
         check(obj.id != null) { "Scrap instance probably never inserted (not have id)" }
 
         val updatedRecordsNo = ScrapInstances.update({ ScrapInstances.id eq obj.id!! }) {
@@ -45,22 +47,10 @@ class ScrapInstancesFacadeImpl(private val databaseConnection: Database) : Scrap
         check(updatedRecordsNo == 1) { "Computer with id=${obj.id} not found" }
     }
 
-    override fun update(collection: Iterable<ScrapInstance>) {
-        collection.forEach { update(it) }
-    }
-
-    override fun delete(obj: ScrapInstance) {
+    override fun delete(obj: ScrapInstance) = transaction(appDatabase.database) {
         check(obj.id != null) { "Scrap instance probably never inserted (not have id)" }
 
         val deletedRecordsNo = ScrapInstances.deleteWhere { ScrapInstances.id eq obj.id!! }
         check(deletedRecordsNo == 1) { "Scrap instance with id=${obj.id} not found" }
     }
-
-    override fun delete(collection: Iterable<ScrapInstance>) {
-        collection.forEach { delete(it) }
-    }
-
-    override fun close() {
-    }
-
 }
