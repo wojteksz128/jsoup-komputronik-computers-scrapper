@@ -1,5 +1,6 @@
 package net.wojteksz128.jsoupTest
 
+import net.wojteksz128.jsoupTest.scraper.ScrapperScheduler
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.scheduling.annotation.EnableScheduling
@@ -9,5 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling
 open class Application
 
 fun main(args: Array<String>) {
-    runApplication<Application>(*args)
+    val context = runApplication<Application>(*args)
+    context.getBean(ScrapperScheduler::class.java).runScheduled()
 }

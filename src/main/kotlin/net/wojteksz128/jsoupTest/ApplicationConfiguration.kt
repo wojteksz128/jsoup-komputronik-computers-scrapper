@@ -20,13 +20,6 @@ open class ApplicationConfiguration {
         ScrapperScheduler(komputronikScrapper, appDatabase)
 
     @Bean
-    open fun runScrapper(komputronikScrapper: KomputronikScrapper, appDatabase: AppDatabase) =
-        CommandLineRunner {
-            val scrappyData = komputronikScrapper.scrap()
-            appDatabase.store(scrappyData)
-        }
-
-    @Bean
     open fun databaseConnection(
         @Value("\${datasource.url}") url: String,
         @Value("\${datasource.driver-class-name}") driver: String

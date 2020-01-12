@@ -1,37 +1,54 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Title</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/bootstrap-grid.min.css"/>
+    <link rel="stylesheet" href="/css/bootstrap-reboot.min.css"/>
+    <link rel="stylesheet" href="/css/navbar-fixed-left.min.css"/>
+
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
-    <form id="filters" action="/">
-        <div class="filter-body" th:each="filter: ${filters}">
-            <button type="submit">Filtruj</button>
-            <label th:for="${'s' + filter.id}" th:text="${filter.name}">filter.name</label>
-            <ul th:id="${'s' + filter.id}">
-                <li th:each="value : ${filter.values}">
-                    <input type="checkbox" name="specValue" th:value="${value.id}" th:text="${value.name}" />
-                </li>
-            </ul>
-            <button type="submit">Filtruj</button>
-        </div>
-    </form>
-    <table>
-        <thead>
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-left">
+            <a class="navbar-brand" href="#">Navbar</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <form id="filters" action="/">
+                <div class="filter-body" th:each="filter: ${filters}">
+                    <label th:for="${'s' + filter.id}" th:text="${filter.name}">filter.name</label>
+                    <ul th:id="${'s' + filter.id}">
+                        <li th:each="value : ${filter.values}">
+                            <input type="checkbox" name="specValue" th:value="${value.id}" th:text="${value.name}" />
+                        </li>
+                    </ul>
+                </div>
+                <button type="submit">Filtruj</button>
+            </form>
+        </nav>
+        <table>
+            <thead>
             <tr>
                 <th>Name</th>
                 <th>Price</th>
                 <th>Link</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             <tr th:each="pc: ${pcs}">
                 <td th:text="${pc.name}">pc.name</td>
                 <td th:text="${currencyFormatter.invoke(pc.price)}">currencyFormatter(pc.price)</td>
                 <td><a th:href="${pc.url}">Link do komputronik</a></td>
             </tr>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
+
 </body>
 </html>
