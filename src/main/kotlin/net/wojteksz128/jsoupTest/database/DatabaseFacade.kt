@@ -10,6 +10,12 @@ interface DatabaseFacade<T> : Closeable {
     fun getAllByIds(ids: Iterable<Int>): Iterable<T>
     fun save(obj: T)
 
+    fun saveIfNotExist(obj: T)
+
+    fun saveIfNotExist(collection: Iterable<T>) = transaction {
+        collection.forEach { saveIfNotExist(it) }
+    }
+
     fun save(collection: Iterable<T>) = transaction {
         collection.forEach { save(it) }
     }

@@ -53,4 +53,8 @@ class ScrapInstancesFacadeImpl : ScrapInstancesFacade {
         val deletedRecordsNo = ScrapInstances.deleteWhere { ScrapInstances.id eq obj.id!! }
         check(deletedRecordsNo == 1) { "Scrap instance with id=${obj.id} not found" }
     }
+
+    override fun saveIfNotExist(obj: ScrapInstance) = transaction(appDatabase.database) {
+        save(obj)
+    }
 }

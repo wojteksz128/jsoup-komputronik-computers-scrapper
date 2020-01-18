@@ -73,4 +73,8 @@ class ComputerSpecificationAssignationFacadeImpl : ComputerSpecificationAssignat
             ComputerSpecificationValuesAssignations.deleteWhere { ComputerSpecificationValuesAssignations.id eq obj.id!! }
         check(deletedRecordsNo == 1) { "Computer specification assignation with id=${obj.id} not found" }
     }
+
+    override fun saveIfNotExist(obj: ComputerSpecificationAssignation) = transaction(appDatabase.database) {
+        save(obj)
+    }
 }

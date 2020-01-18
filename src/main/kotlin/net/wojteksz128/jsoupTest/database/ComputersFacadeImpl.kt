@@ -79,4 +79,8 @@ class ComputersFacadeImpl : ComputersFacade {
         val deletedRecordsNo = Computers.deleteWhere { Computers.id eq obj.id!! }
         check(deletedRecordsNo == 1) { "Computer with id=${obj.id} not found" }
     }
+
+    override fun saveIfNotExist(obj: Computer) = transaction(appDatabase.database) {
+        save(obj)
+    }
 }
