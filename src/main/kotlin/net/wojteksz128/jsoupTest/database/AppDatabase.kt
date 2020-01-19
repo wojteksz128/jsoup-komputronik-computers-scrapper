@@ -40,9 +40,9 @@ class AppDatabase(
         println("Store scrap instance".stepLabel())
         scrapInstances.save(scrappyData.scrapInstance)
         println("Store specifications".stepLabel())
-        specifications.save(scrappyData.properties)
+        specifications.saveIfNotExist(scrappyData.properties)
         println("Store specifications values".stepLabel())
-        specificationsValues.save(scrappyData.propertiesPossibleValues.values.flatten())
+        specificationsValues.saveIfNotExist(scrappyData.propertiesPossibleValues.values.flatten())
         println("Store computers".stepLabel())
         computers.save(scrappyData.scrapInstance.computers)
         val computerSpecificationsAssignations =

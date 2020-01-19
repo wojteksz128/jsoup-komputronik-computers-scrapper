@@ -50,4 +50,19 @@ class ComputerSpecificationsFacadeImpl : ComputerSpecificationsFacade {
         val deletedRecordsNo = ComputerSpecifications.deleteWhere { ComputerSpecifications.id eq obj.id!! }
         check(deletedRecordsNo == 1) { "Computer specification with id=${obj.id} not found" }
     }
+
+    override fun saveIfNotExist(obj: ComputerSpecification) = transaction(appDatabase.database) {
+
+        val existingId = getIdByValue(obj.name)?.id
+        if(existingId == null) {
+            save(obj)
+        }
+        else{
+            obj.id = existingId
+        }
+    }
+
+    private fun getIdByValue(value: String) = transaction(appDatabase.database) {
+        ComputerSpecifications.select { ComputerSpecifications.name eq value }.map { mapToFullObject(it) }.singleOrNull()
+    }
 }
