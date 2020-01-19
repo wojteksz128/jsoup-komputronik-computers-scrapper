@@ -18,19 +18,20 @@ class HtmlController(private val appDatabase: AppDatabase) {
     @GetMapping("/")
     fun home(model: Model, @RequestParam(required = false, name = "specValue") valuesIds: List<Int>?): String {
         val specValues = appDatabase.specificationsValues.getAllByIds(valuesIds ?: listOf())
-            .groupBy(ComputerSpecificationValue::specification) { it.id!! }
+            .groupBy({ it.specification.id!! }) { it.id!! }
         val filteredComputers = findComputers(specValues)
         val specifications = getAndSortSpecifications()
         val currencyFormatter = { price: Int -> NumberFormat.getCurrencyInstance().format(price) }
 
         model["pcs"] = filteredComputers
         model["filters"] = specifications
+        model["selectedFilters"] = specValues
         model["currencyFormatter"] = currencyFormatter
 
         return "home"
     }
 
-    private fun findComputers(specValues: Map<ComputerSpecification, List<Int>>): Iterable<Computer> {
+    private fun findComputers(specValues: Map<Int, List<Int>>): Iterable<Computer> {
         val specificationAssignedComputers =
             specValues.values.map { appDatabase.computers.getAllForLastScrapContainingValues(it) }
         var filteredComputers: Iterable<Computer>? = null

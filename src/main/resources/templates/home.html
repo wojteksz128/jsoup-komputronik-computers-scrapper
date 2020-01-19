@@ -4,51 +4,114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Title</title>
-    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/css/bootstrap-grid.min.css"/>
-    <link rel="stylesheet" href="/css/bootstrap-reboot.min.css"/>
-    <link rel="stylesheet" href="/css/navbar-fixed-left.min.css"/>
+    <link rel="stylesheet" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="css/bootstrap-grid.min.css"/>
+    <link rel="stylesheet" href="css/bootstrap-reboot.min.css"/>
+    <!--    <link rel="stylesheet" href="/css/navbar-fixed-left.min.css"/>-->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.8/css/all.css">
 
+    <script src="js/jquery-3.4.1.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
+
+    <style type="text/css">
+        html, body, body > .container-fluid, body > .container-fluid > .row {
+            height: 100%;
+        }
+
+        #filters {
+            width: 232px;
+            flex-flow: column nowrap;
+            align-items: flex-start;
+            z-index: 1030;
+        }
+
+        #filters .header {
+            color: #fff;
+            text-decoration: none;
+            display: inline-block;
+            padding-top: .3125rem;
+            padding-bottom: .3125rem;
+            margin-right: 1rem;
+            font-size: 1.25rem;
+            line-height: inherit;
+            white-space: nowrap;
+        }
+
+        #filters .navbar-collapse {
+            flex-grow: 0;
+            flex-direction: column;
+            width: 100%;
+            margin-top: .5rem;
+        }
+
+    </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-left">
-            <a class="navbar-brand" href="#">Navbar</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+<div class="container-fluid">
+    <div class="row">
+        <div id="filters" class="col-12 col-md-2 bg-primary">
+            <div style="width: 100%">
+                <a class="header" href="#">Navbar</a>
+                <!--<button class="toggler float-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>-->
+            </div>
 
-            <form id="filters" action="/">
-                <div class="filter-body" th:each="filter: ${filters}">
-                    <label th:for="${'s' + filter.id}" th:text="${filter.name}">filter.name</label>
-                    <ul th:id="${'s' + filter.id}">
-                        <li th:each="value : ${filter.values}">
-                            <input type="checkbox" name="specValue" th:value="${value.id}" th:text="${value.name}" />
-                        </li>
-                    </ul>
-                </div>
-                <button type="submit">Filtruj</button>
-            </form>
-        </nav>
-        <table>
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Link</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="pc: ${pcs}">
-                <td th:text="${pc.name}">pc.name</td>
-                <td th:text="${currencyFormatter.invoke(pc.price)}">currencyFormatter(pc.price)</td>
-                <td><a th:href="${pc.url}">Link do komputronik</a></td>
-            </tr>
-            </tbody>
-        </table>
+            <div id="navbarSupportedContent">
+                <form action="/">
+                    <button type="submit" class="btn btn-success">Filtruj</button>
+                    <div class="card">
+                        <article class="card-group-item" th:each="filter: ${filters}">
+                            <header class="card-header">
+                                <button class="btn btn-link" type="button" data-toggle="collapse"
+                                        th:data-target="${'#Spec' + filter.id + '_Values'}"
+                                        th:aria-controls="${'Spec' + filter.id + '_Values'}" aria-expanded="false"
+                                        th:aria-label="${'Toggle ' + filter.name + ' values'}">
+                                    <span class="title" th:text="${filter.name}">filter.name</span>
+                                </button>
+                            </header>
+                            <div th:id="${'Spec' + filter.id + '_Values'}" class="filter-content collapse">
+                                <div class="card-body">
+                                    <div class="custom-control custom-checkbox" th:each="value: ${filter.values}">
+                                        <span class="float-right badge badge-light round">0</span>
+                                        <input type="checkbox" class="custom-control-input" name="specValue"
+                                               th:id="${'Spec' + filter.id + '_Value' + value.id}"
+                                               th:value="${value.id}"
+                                               th:checked="${selectedFilters.get(filter.id) != null && selectedFilters.get(filter.id).contains(value.id)}">
+                                        <label class="custom-control-label"
+                                               th:for="${'Spec' + filter.id + '_Value' + value.id}"
+                                               th:text="${value.name}">value.name</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                    <button type="submit" class="btn btn-success">Filtruj</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-12 col-md-10">
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Link</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="pc: ${pcs}">
+                    <td th:text="${pc.name}">pc.name</td>
+                    <td th:text="${currencyFormatter.invoke(pc.price)}">currencyFormatter(pc.price)</td>
+                    <td><a th:href="${pc.url}">Link do komputronik</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
+</div>
 
 </body>
 </html>
