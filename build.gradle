@@ -30,6 +30,7 @@ dependencies {
     runtimeOnly("com.h2database:h2:1.4.191")
     // Exposed depends on Joda-time so include it
     implementation("joda-time:joda-time:2.9.2")
+    implementation "com.panforge:robots:1.4.3"
 }
 
 compileKotlin {

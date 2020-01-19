@@ -1,16 +1,15 @@
 package net.wojteksz128.jsoupTest.scraper
 
-import net.wojteksz128.jsoupTest.groupLabel
-import net.wojteksz128.jsoupTest.masterLabel
+import net.wojteksz128.jsoupTest.*
 import net.wojteksz128.jsoupTest.model.Computer
 import net.wojteksz128.jsoupTest.model.ComputerSpecification
 import net.wojteksz128.jsoupTest.model.ComputerSpecificationAssignation
 import net.wojteksz128.jsoupTest.model.ComputerSpecificationValue
-import net.wojteksz128.jsoupTest.stepLabel
 import org.joda.time.DateTime
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.text.MessageFormat.format
 import java.util.*
 import java.util.stream.IntStream
@@ -19,6 +18,7 @@ interface KomputronikScrapper {
     fun scrap(): ScrappyData
 }
 
+private const val ROBOTS_FILE_PATH = "https://www.komputronik.pl/robots.txt"
 private const val SCRAPPER_START_ADDRESS = "https://www.komputronik.pl/category/5801/komputery-pc.html"
 private const val BASE_PAGE_WITH_PAGE_NO = "$SCRAPPER_START_ADDRESS?p={0}"
 
@@ -27,21 +27,27 @@ private const val PAGINATION_ITEM_SELECTOR = ".pagination.sp-top-grey:not([ng-cl
 private const val FULL_PRODUCT_SPECIFICATION_SELECTOR = "#p-content-specification .full-specification"
 
 class KomputronikScrapperImpl : KomputronikScrapper {
+    private val log: Logger = LoggerFactory.getLogger(KomputronikScrapperImpl::class.java)
 
     override fun scrap(): ScrappyData {
         val scrappyData = ScrappyData(DateTime.now())
+        val pageGetter = PageGetter(ROBOTS_FILE_PATH)
 
-        println("Scrapping started".masterLabel())
-        IntStream.rangeClosed(1, getPagesNo()).forEach { pageNo -> fetchPCsFromPage(pageNo, scrappyData) }
-        scrappyData.scrapInstance.endDate = DateTime.now()
-        println("Scrapping ended".masterLabel())
+        log.info("Scrapping started".masterLabel())
+        try {
+            IntStream.rangeClosed(1, getPagesNo(pageGetter))
+                .forEach { pageNo -> fetchPCsFromPage(pageNo, scrappyData, pageGetter) }
+            scrappyData.scrapInstance.endDate = DateTime.now()
+        } catch (ignored: PageNotAllowedException) {
+        }
+        log.info("Scrapping ended".masterLabel())
 
         return scrappyData
     }
 
-    private fun getPagesNo(): Int {
-        return Jsoup.connect(SCRAPPER_START_ADDRESS).get()
-            ?.select(PAGINATION_ITEM_SELECTOR)
+    private fun getPagesNo(pageGetter: PageGetter): Int {
+        return pageGetter.get(SCRAPPER_START_ADDRESS)
+            .select(PAGINATION_ITEM_SELECTOR)
             ?.stream()
             ?.map { it.text().toIntOrNull() }
             ?.filter(Objects::nonNull)
@@ -51,38 +57,51 @@ class KomputronikScrapperImpl : KomputronikScrapper {
             ?: 1
     }
 
-    private fun fetchPCsFromPage(pageNo: Int, scrappyData: ScrappyData) {
-        println("Page $pageNo".stepLabel())
-        val pageDocument = Jsoup.connect(format(BASE_PAGE_WITH_PAGE_NO, pageNo)).get()
-        fetchPCsFromDocument(pageDocument, scrappyData)
-    }
-
-    private fun fetchPCsFromDocument(mainDocument: Document, scrappyData: ScrappyData) {
-        mainDocument.select(PRODUCT_LIST_ITEM_HEADER_SELECTOR)
-            .parallelStream()
-            .forEach { headline -> readHeadline(headline, scrappyData) }
-    }
-
-    private fun readHeadline(headline: Element, scrappyData: ScrappyData) {
-        if (headline.isWebFrameworkLayout()) return
-
-        if (headline.hasHrefToPCGroup()) {
-            println("${headline.childNodes().first()}".groupLabel())
-            val computerGroupDocument = Jsoup.connect(headline.absUrl("href")).get()
-            fetchPCsFromDocument(computerGroupDocument, scrappyData)
-        } else {
-            val computer =
-                Computer(headline.childNodes().first().toString(), headline.absUrl("href"), scrappyData.scrapInstance)
-            println("${computer.name}\n\t${computer.url}")
-            scrappyData.scrapInstance.computers.add(computer)
-            fetchPCInformation(computer, scrappyData)
+    private fun fetchPCsFromPage(
+        pageNo: Int,
+        scrappyData: ScrappyData,
+        pageGetter: PageGetter
+    ) {
+        log.info("Page $pageNo".stepLabel())
+        try {
+            val pageDocument = pageGetter.get(format(BASE_PAGE_WITH_PAGE_NO, pageNo))
+            fetchPCsFromDocument(pageDocument, scrappyData, pageGetter)
+        } catch (ignored: PageNotAllowedException) {
         }
     }
 
-    private fun fetchPCInformation(computer: Computer, scrappyData: ScrappyData) {
-        val doc = Jsoup.connect(computer.url).get()
-        computer.price = readPrice(doc)
-        computer.specs.addAll(readAllSpecs(doc, computer, scrappyData))
+    private fun fetchPCsFromDocument(mainDocument: Document, scrappyData: ScrappyData, pageGetter: PageGetter) {
+        mainDocument.select(PRODUCT_LIST_ITEM_HEADER_SELECTOR)
+            .parallelStream()
+            .forEach { headline -> readHeadline(headline, scrappyData, pageGetter) }
+    }
+
+    private fun readHeadline(headline: Element, scrappyData: ScrappyData, pageGetter: PageGetter) {
+        if (headline.isWebFrameworkLayout()) return
+
+        if (headline.hasHrefToPCGroup()) {
+            log.info("${headline.childNodes().first()}".groupLabel())
+            try {
+                val computerGroupDocument = pageGetter.get(headline.absUrl("href"))
+                fetchPCsFromDocument(computerGroupDocument, scrappyData, pageGetter)
+            } catch (ignored: PageNotAllowedException) {
+            }
+        } else {
+            val computer =
+                Computer(headline.childNodes().first().toString(), headline.absUrl("href"), scrappyData.scrapInstance)
+            log.info("${computer.name}\n\t${computer.url}")
+            scrappyData.scrapInstance.computers.add(computer)
+            fetchPCInformation(computer, scrappyData, pageGetter)
+        }
+    }
+
+    private fun fetchPCInformation(computer: Computer, scrappyData: ScrappyData, pageGetter: PageGetter) {
+        try {
+            val doc = pageGetter.get(computer.url)
+            computer.price = readPrice(doc)
+            computer.specs.addAll(readAllSpecs(doc, computer, scrappyData))
+        } catch (ignored: PageNotAllowedException) {
+        }
     }
 
     private fun readPrice(doc: Document): Double {
